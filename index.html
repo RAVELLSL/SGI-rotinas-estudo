@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organizador de Rotinas de Estudo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    }
+    h2, h3 {
+      text-align: center;
+      color: #333;
+    }
+    label {
+      font-weight: bold;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .schedule-list {
+      margin-top: 20px;
+    }
+    .schedule-item {
+      background: #e9ecef;
+      padding: 15px;
+      margin: 5px 0;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .schedule-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin-right: 10px;
+    }
+    .info-row {
+      margin: 3px 0;
+      font-size: 14px;
+    }
+    .info-row span.label {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .schedule-actions button {
+      margin: 2px;
+      flex-shrink: 0;
+    }
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .delete-btn:hover {
+      background-color: #c82333;
+    }
+    .complete-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .complete-btn:hover {
+      background-color: #218838;
+    }
+    .edit-btn {
+      background-color: #ffc107;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .edit-btn:hover {
+      background-color: #e0a800;
+    }
+    .completed {
+      text-decoration: line-through;
+      color: #777;
+      background: #d4edda;
+    }
+    .color-box {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      margin-right: 5px;
+      display: inline-block;
+      border: 1px solid #ccc;
+      vertical-align: middle;
+    }
+    /* Modal de edição */
+    #edit-modal {
+      display: none; 
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    #edit-modal .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      box-sizing: border-box;
+    }
+    /* Responsividade para dispositivos menores */
+    @media (max-width: 600px) {
+      .container {
+        margin: 10px;
+        padding: 15px;
+      }
+      input, select, button {
+        font-size: 14px;
+        padding: 8px;
+      }
+      h2, h3 {
+        font-size: 20px;
+      }
+      #edit-modal .modal-content {
+        margin: 20% auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>📚 Organizador de Rotinas de Estudo</h2>
+
+    <!-- Campo de Categoria -->
+    <label for="category">🏷 Categoria:</label>
+    <select id="category">
+      <option value="Exatas">Exatas</option>
+      <option value="Humanas">Humanas</option>
+      <option value="Biológicas">Biológicas</option>
+      <option value="Linguagens">Linguagens</option>
+      <option value="Estudos Religiosos">Estudos Religiosos</option>
+    </select>
+
+    <!-- Campo de Subcategoria (será atualizado dinamicamente) -->
+    <label for="subcategory">📂 Subcategoria:</label>
+    <select id="subcategory">
+      <!-- Será preenchido dinamicamente -->
+    </select>
+
+    <!-- Campo de Disciplina -->
+    <label for="subject">📖 Disciplina:</label>
+    <input type="text" id="subject" placeholder="Ex: Matemática">
+
+    <label for="study-time">⏰ Horário de Estudo:</label>
+    <input type="time" id="study-time">
+
+    <label for="duration">⏳ Duração (minutos):</label>
+    <input type="number" id="duration" placeholder="Ex: 60" min="10">
+
+    <label for="priority">🔥 Prioridade:</label>
+    <select id="priority">
+      <option value="Alta">Alta</option>
+      <option value="Média">Média</option>
+      <option value="Baixa">Baixa</option>
+    </select>
+
+    <!-- Sistema de cores melhorado -->
+    <label for="color-select">🎨 Cor da Disciplina:</label>
+    <select id="color-select">
+      <option value="#FF0000">Vermelho</option>
+      <option value="#0000FF">Azul</option>
+      <option value="#008000">Verde</option>
+      <option value="#FFFF00">Amarelo</option>
+      <option value="#800080">Roxo</option>
+      <option value="#FFA500">Laranja</option>
+      <option value="#808080">Cinza</option>
+      <option value="custom">Personalizado</option>
+    </select>
+    <input type="color" id="custom-color" style="display: none;" value="#ffffff">
+
+    <button id="addScheduleBtn">➕ Adicionar Cronograma</button>
+
+    <h3>📌 Meu Cronograma</h3>
+    <div class="schedule-list" id="schedule-list">
+      <!-- Cronogramas serão adicionados aqui -->
+    </div>
+  </div>
+
+  <!-- Modal de Edição -->
+  <div id="edit-modal">
+    <div class="modal-content">
+      <h3>Editar Cronograma</h3>
+
+      <!-- Campos na ordem: Categoria, Subcategoria, Disciplina -->
+      <label for="edit-category">🏷 Categoria:</label>
+      <select id="edit-category">
+        <option value="Exatas">Exatas</option>
+        <option value="Humanas">Humanas</option>
+        <option value="Biológicas">Biológicas</option>
+        <option value="Linguagens">Linguagens</option>
+        <option value="Estudos Religiosos">Estudos Religiosos</option>
+      </select>
+
+      <label for="edit-subcategory">📂 Subcategoria:</label>
+      <select id="edit-subcategory">
+        <!-- Será preenchido dinamicamente -->
+      </select>
+
+      <label for="edit-subject">📖 Disciplina:</label>
+      <input type="text" id="edit-subject" placeholder="Ex: Matemática">
+
+      <label for="edit-study-time">⏰ Horário de Estudo:</label>
+      <input type="time" id="edit-study-time">
+
+      <label for="edit-duration">⏳ Duração (minutos):</label>
+      <input type="number" id="edit-duration" placeholder="Ex: 60" min="10">
+
+      <label for="edit-priority">🔥 Prioridade:</label>
+      <select id="edit-priority">
+        <option value="Alta">Alta</option>
+        <option value="Média">Média</option>
+        <option value="Baixa">Baixa</option>
+      </select>
+
+      <label for="edit-color-select">🎨 Cor da Disciplina:</label>
+      <select id="edit-color-select">
+        <option value="#FF0000">Vermelho</option>
+        <option value="#0000FF">Azul</option>
+        <option value="#008000">Verde</option>
+        <option value="#FFFF00">Amarelo</option>
+        <option value="#800080">Roxo</option>
+        <option value="#FFA500">Laranja</option>
+        <option value="#808080">Cinza</option>
+        <option value="custom">Personalizado</option>
+      </select>
+      <input type="color" id="edit-custom-color" style="display: none;" value="#ffffff">
+
+      <div style="margin-top: 10px; display: flex; justify-content: space-between;">
+        <button id="save-edit-btn" style="flex:1; margin-right: 5px;">Salvar</button>
+        <button id="cancel-edit-btn" style="flex:1; margin-left: 5px;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentEditingItem = null; // Armazena o item sendo editado
+
+    // Objeto de subcategorias com 10 opções para cada categoria, exceto "Estudos Religiosos" (já com 10)
+    const subcategories = {
+      "Exatas": [
+        "Matemática",
+        "Física",
+        "Química",
+        "Informática",
+        "Cálculo",
+        "Álgebra",
+        "Geometria",
+        "Estatística",
+        "Probabilidade",
+        "Mecânica"
+      ],
+      "Humanas": [
+        "História",
+        "Geografia",
+        "Sociologia",
+        "Filosofia",
+        "Estudo Bíblico",
+        "Antropologia",
+        "Psicologia",
+        "Economia",
+        "Política",
+        "Arte"
+      ],
+      "Biológicas": [
+        "Biologia",
+        "Fisiologia",
+        "Anatomia",
+        "Ecologia",
+        "Genética",
+        "Microbiologia",
+        "Botânica",
+        "Zoologia",
+        "Bioquímica",
+        "Biotecnologia"
+      ],
+      "Linguagens": [
+        "Português",
+        "Inglês",
+        "Espanhol",
+        "Literatura",
+        "Gramática",
+        "Redação",
+        "Comunicação",
+        "Tradução",
+        "Linguística",
+        "Mídia"
+      ],
+      "Estudos Religiosos": [
+        "Estudos Bíblicos",
+        "Teologia",
+        "História da Religião",
+        "Filosofia da Religião",
+        "Missiologia",
+        "Espiritualidade",
+        "Ética Religiosa",
+        "Religião Comparada",
+        "Sociologia da Religião",
+        "Psicologia da Religião"
+      ]
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      updateSubcategories();
+      updateEditSubcategories();
+      loadSchedules();
+
+      document.getElementById("addScheduleBtn").addEventListener("click", addSchedule);
+      document.getElementById("color-select").addEventListener("change", toggleCustomColor);
+      document.getElementById("category").addEventListener("change", updateSubcategories);
+      document.getElementById("edit-color-select").addEventListener("change", toggleEditCustomColor);
+      document.getElementById("edit-category").addEventListener("change", updateEditSubcategories);
+      document.getElementById("save-edit-btn").addEventListener("click", saveEdit);
+      document.getElementById("cancel-edit-btn").addEventListener("click", cancelEdit);
+    });
+
+    // Atualiza o select de subcategoria no formulário principal
+    function updateSubcategories() {
+      const category = document.getElementById("category").value;
+      const subcategorySelect = document.getElementById("subcategory");
+      subcategorySelect.innerHTML = "";
+      subcategories[category].forEach(subcat => {
+        const option = document.createElement("option");
+        option.value = subcat;
+        option.textContent = subcat;
+        subcategorySelect.appendChild(option);
+      });
+    }
+
+    // Atualiza o select de subcategoria no modal de edição
+    function updateEditSubcategories() {
+      const category = document.getElementById("edit-category").value;
+      const subcategorySelect = document.getElementById("edit-subcategory");
+      subcategorySelect.innerHTML = "";
+      subcategories[category].forEach(subcat => {
+        const option = document.createElement("option");
+        option.value = subcat;
+        option.textContent = subcat;
+        subcategorySelect.appendChild(option);
+      });
+    }
+
+    function toggleCustomColor() {
+      const colorSelect = document.getElementById("color-select");
+      const customColorInput = document.getElementById("custom-color");
+      customColorInput.style.display = (colorSelect.value === "custom") ? "block" : "none";
+    }
+
+    function toggleEditCustomColor() {
+      const editColorSelect = document.getElementById("edit-color-select");
+      const editCustomColor = document.getElementById("edit-custom-color");
+      editCustomColor.style.display = (editColorSelect.value === "custom") ? "block" : "none";
+    }
+
+    function getSelectedColor() {
+      const colorSelect = document.getElementById("color-select");
+      return (colorSelect.value === "custom") 
+        ? document.getElementById("custom-color").value 
+        : colorSelect.value;
+    }
+
+    function addSchedule() {
+      const category = document.getElementById('category').value;
+      const subcategory = document.getElementById('subcategory').value;
+      const subject = document.getElementById('subject').value.trim();
+      const studyTime = document.getElementById('study-time').value.trim();
+      const duration = document.getElementById('duration').value.trim();
+      const priority = document.getElementById('priority').value;
+      const color = getSelectedColor();
+
+      if (!subject || !studyTime || !duration) {
+        alert("Preencha todos os campos!");
+        return;
+      }
+      if (isNaN(duration) || Number(duration) < 10) {
+        alert("Duração deve ser um número válido e no mínimo 10 minutos!");
+        return;
+      }
+
+      const scheduleList = document.getElementById("schedule-list");
+      const scheduleItem = document.createElement("div");
+      scheduleItem.classList.add("schedule-item");
+
+      // Armazena os dados via data attributes
+      scheduleItem.dataset.category = category;
+      scheduleItem.dataset.subcategory = subcategory;
+      scheduleItem.dataset.subject = subject;
+      scheduleItem.dataset.studyTime = studyTime;
+      scheduleItem.dataset.duration = duration;
+      scheduleItem.dataset.priority = priority;
+      scheduleItem.dataset.color = color;
+      scheduleItem.dataset.completed = "false";
+
+      scheduleItem.innerHTML = `
+        <div class="schedule-details">
+          <div class="info-row">
+            <span class="color-box" style="background-color:${color}"></span>
+            <span class="label">Categoria:</span> ${category}
+          </div>
+          <div class="info-row">
+            <span class="label">Subcategoria:</span> ${subcategory}
+          </div>
+          <div class="info-row">
+            <span class="label">Disciplina:</span> ${subject}
+          </div>
+          <div class="info-row">
+            <span class="label">Horário:</span> ${studyTime}
+          </div>
+          <div class="info-row">
+            <span class="label">Duração:</span> ${duration} min
+          </div>
+          <div class="info-row">
+            <span class="label">Prioridade:</span> ${priority}
+          </div>
+        </div>
+        <div class="schedule-actions">
+          <button class="complete-btn">✔️</button>
+          <button class="edit-btn">✏️</button>
+          <button class="delete-btn">🗑</button>
+        </div>
+      `;
+
+      scheduleItem.querySelector('.complete-btn').addEventListener('click', () => completeTask(scheduleItem));
+      scheduleItem.querySelector('.edit-btn').addEventListener('click', () => openEditModal(scheduleItem));
+      scheduleItem.querySelector('.delete-btn').addEventListener('click', () => removeSchedule(scheduleItem));
+
+      scheduleList.appendChild(scheduleItem);
+      saveSchedules();
+
+      // Reset dos campos do formulário
+      document.getElementById('category').selectedIndex = 0;
+      updateSubcategories();
+      document.getElementById('subject').value = "";
+      document.getElementById('study-time').value = "";
+      document.getElementById('duration').value = "";
+      document.getElementById('priority').selectedIndex = 0;
+      document.getElementById('color-select').selectedIndex = 0;
+      document.getElementById('custom-color').style.display = "none";
+      document.getElementById('custom-color').value = "#ffffff";
+    }
+
+    function completeTask(item) {
+      const isCompleted = item.dataset.completed === "true";
+      item.dataset.completed = (!isCompleted).toString();
+      item.classList.toggle("completed");
+      saveSchedules();
+    }
+
+    function removeSchedule(item) {
+      item.remove();
+      saveSchedules();
+    }
+
+    function openEditModal(item) {
+      currentEditingItem = item;
+      document.getElementById("edit-category").value = item.dataset.category;
+      updateEditSubcategories();
+      document.getElementById("edit-subcategory").value = item.dataset.subcategory;
+      document.getElementById("edit-subject").value = item.dataset.subject;
+      document.getElementById("edit-study-time").value = item.dataset.studyTime;
+      document.getElementById("edit-duration").value = item.dataset.duration;
+      document.getElementById("edit-priority").value = item.dataset.priority;
+      
+      const editColorSelect = document.getElementById("edit-color-select");
+      const editCustomColor = document.getElementById("edit-custom-color");
+      const currentColor = item.dataset.color;
+      let found = false;
+      for (let option of editColorSelect.options) {
+        if (option.value === currentColor) {
+          found = true;
+          break;
+        }
+      }
+      if (found) {
+        editColorSelect.value = currentColor;
+        editCustomColor.style.display = "none";
+      } else {
+        editColorSelect.value = "custom";
+        editCustomColor.style.display = "block";
+        editCustomColor.value = currentColor;
+      }
+      document.getElementById("edit-modal").style.display = "block";
+    }
+
+    function saveEdit() {
+      if (!currentEditingItem) return;
+
+      const category = document.getElementById("edit-category").value;
+      const subcategory = document.getElementById("edit-subcategory").value;
+      const subject = document.getElementById("edit-subject").value.trim();
+      const studyTime = document.getElementById("edit-study-time").value.trim();
+      const duration = document.getElementById("edit-duration").value.trim();
+      const priority = document.getElementById("edit-priority").value;
+      const editColorSelect = document.getElementById("edit-color-select");
+      const color = (editColorSelect.value === "custom") 
+                    ? document.getElementById("edit-custom-color").value 
+                    : editColorSelect.value;
+
+      if (!subject || !studyTime || !duration) {
+        alert("Preencha todos os campos!");
+        return;
+      }
+      if (isNaN(duration) || Number(duration) < 10) {
+        alert("Duração deve ser um número válido e no mínimo 10 minutos!");
+        return;
+      }
+
+      currentEditingItem.dataset.category = category;
+      currentEditingItem.dataset.subcategory = subcategory;
+      currentEditingItem.dataset.subject = subject;
+      currentEditingItem.dataset.studyTime = studyTime;
+      currentEditingItem.dataset.duration = duration;
+      currentEditingItem.dataset.priority = priority;
+      currentEditingItem.dataset.color = color;
+
+      currentEditingItem.innerHTML = `
+        <div class="schedule-details">
+          <div class="info-row">
+            <span class="color-box" style="background-color:${color}"></span>
+            <span class="label">Categoria:</span> ${category}
+          </div>
+          <div class="info-row">
+            <span class="label">Subcategoria:</span> ${subcategory}
+          </div>
+          <div class="info-row">
+            <span class="label">Disciplina:</span> ${subject}
+          </div>
+          <div class="info-row">
+            <span class="label">Horário:</span> ${studyTime}
+          </div>
+          <div class="info-row">
+            <span class="label">Duração:</span> ${duration} min
+          </div>
+          <div class="info-row">
+            <span class="label">Prioridade:</span> ${priority}
+          </div>
+        </div>
+        <div class="schedule-actions">
+          <button class="complete-btn">✔️</button>
+          <button class="edit-btn">✏️</button>
+          <button class="delete-btn">🗑</button>
+        </div>
+      `;
+      currentEditingItem.querySelector('.complete-btn').addEventListener('click', () => completeTask(currentEditingItem));
+      currentEditingItem.querySelector('.edit-btn').addEventListener('click', () => openEditModal(currentEditingItem));
+      currentEditingItem.querySelector('.delete-btn').addEventListener('click', () => removeSchedule(currentEditingItem));
+
+      saveSchedules();
+      cancelEdit();
+    }
+
+    function cancelEdit() {
+      currentEditingItem = null;
+      document.getElementById("edit-modal").style.display = "none";
+    }
+
+    function saveSchedules() {
+      const schedules = [];
+      document.querySelectorAll(".schedule-item").forEach(item => {
+        schedules.push({
+          category: item.dataset.category,
+          subcategory: item.dataset.subcategory,
+          subject: item.dataset.subject,
+          studyTime: item.dataset.studyTime,
+          duration: item.dataset.duration,
+          priority: item.dataset.priority,
+          color: item.dataset.color,
+          completed: item.dataset.completed
+        });
+      });
+      try {
+        localStorage.setItem("schedules", JSON.stringify(schedules));
+      } catch (error) {
+        console.error("Erro ao salvar no localStorage:", error);
+      }
+    }
+
+    function loadSchedules() {
+      const scheduleList = document.getElementById("schedule-list");
+      scheduleList.innerHTML = "";
+      let schedules = [];
+      try {
+        schedules = JSON.parse(localStorage.getItem("schedules")) || [];
+      } catch (error) {
+        console.error("Erro ao carregar do localStorage:", error);
+      }
+
+      schedules.forEach(schedule => {
+        const scheduleItem = document.createElement("div");
+        scheduleItem.classList.add("schedule-item");
+        if (schedule.completed === "true") {
+          scheduleItem.classList.add("completed");
+        }
+        scheduleItem.dataset.category = schedule.category;
+        scheduleItem.dataset.subcategory = schedule.subcategory;
+        scheduleItem.dataset.subject = schedule.subject;
+        scheduleItem.dataset.studyTime = schedule.studyTime;
+        scheduleItem.dataset.duration = schedule.duration;
+        scheduleItem.dataset.priority = schedule.priority;
+        scheduleItem.dataset.color = schedule.color;
+        scheduleItem.dataset.completed = schedule.completed;
+
+        scheduleItem.innerHTML = `
+          <div class="schedule-details">
+            <div class="info-row">
+              <span class="color-box" style="background-color:${schedule.color}"></span>
+              <span class="label">Categoria:</span> ${schedule.category}
+            </div>
+            <div class="info-row">
+              <span class="label">Subcategoria:</span> ${schedule.subcategory}
+            </div>
+            <div class="info-row">
+              <span class="label">Disciplina:</span> ${schedule.subject}
+            </div>
+            <div class="info-row">
+              <span class="label">Horário:</span> ${schedule.studyTime}
+            </div>
+            <div class="info-row">
+              <span class="label">Duração:</span> ${schedule.duration} min
+            </div>
+            <div class="info-row">
+              <span class="label">Prioridade:</span> ${schedule.priority}
+            </div>
+          </div>
+          <div class="schedule-actions">
+            <button class="complete-btn">✔️</button>
+            <button class="edit-btn">✏️</button>
+            <button class="delete-btn">🗑</button>
+          </div>
+        `;
+        scheduleItem.querySelector('.complete-btn').addEventListener('click', () => completeTask(scheduleItem));
+        scheduleItem.querySelector('.edit-btn').addEventListener('click', () => openEditModal(scheduleItem));
+        scheduleItem.querySelector('.delete-btn').addEventListener('click', () => removeSchedule(scheduleItem));
+
+        scheduleList.appendChild(scheduleItem);
+      });
+    }
+  </script>
+</body>
+</html>
